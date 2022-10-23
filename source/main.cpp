@@ -24,10 +24,14 @@ static Sprite sprites[2];
 
 void setup() {
     Sprite* nebi = &sprites[0];
-    Sprite* squart = &sprites[1];
-
+    C2D_SpriteFromSheet(&nebi->spr, spriteSheet, 0);
+    C2D_SpriteSetCenter(&nebi->spr, 0.5f, 0.5f);
     nebi->dx = 100;
     nebi->dy = 50;
+
+    Sprite* squart = &sprites[1];
+    C2D_SpriteFromSheet(&squart->spr, spriteSheet, 1);
+    C2D_SpriteSetCenter(&squart->spr, 0.5f, 0.5f);
     squart->dx = 180;
     squart->dy = 50;
 }
@@ -45,8 +49,6 @@ void draw() {
     C2D_TargetClear(bottom, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)); 
     C2D_SceneBegin(bottom);
     for (size_t i = 0; i < 2; i++) {
-        C2D_SpriteFromSheet(&sprites[i].spr, spriteSheet, i);
-        C2D_SpriteSetCenter(&sprites[i].spr, 0.5f, 0.5f);
         C2D_SpriteSetPos(&sprites[i].spr, sprites[i].dx, sprites[i].dy);
         C2D_DrawSprite(&sprites[i].spr);
     }
