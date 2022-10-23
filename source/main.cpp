@@ -7,7 +7,10 @@
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 240
 
+
 int frame;
+u32 kDown;
+
 C3D_RenderTarget* bottom;
 
 typedef struct
@@ -22,13 +25,12 @@ static Sprite sprites[2];
 void setup() {
     Sprite* nebi = &sprites[0];
 
+    nebi->dx = 100;
+    nebi->dy = 50;
     C2D_SpriteFromSheet(&nebi->spr, spriteSheet, 0);
     C2D_SpriteSetCenter(&nebi->spr, 0.5f, 0.5f);
-    C2D_SpriteSetPos(&nebi->spr, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2);
-    nebi->dx = 10.0f;
-    nebi->dy = 10.0f;
-    printf("\x1b[4;0Hnebi X: %f", nebi->dx);
-    printf("\x1b[5;0Hnebi Y: %f", nebi->dy);
+    C2D_SpriteSetPos(&nebi->spr, nebi->dx, nebi->dy);
+    C2D_SpriteMove(&nebi->spr, nebi->dx, nebi->dy);
 
     Sprite* squart = &sprites[1];
 
@@ -38,8 +40,11 @@ void setup() {
 }
 
 void draw() {
-    printf("\x1b[1;0HHello World!");
+    Sprite* nebi = &sprites[0];
+
     printf("\x1b[2;0HFramecount: %i", frame);
+    printf("\x1b[4;0Hnebi X: %f", nebi->dx);
+    printf("\x1b[5;0Hnebi Y: %f", nebi->dy);
 
     frame++;
 
@@ -47,14 +52,21 @@ void draw() {
     C2D_TargetClear(bottom, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)); 
     C2D_SceneBegin(bottom);
     for (size_t i = 0; i < 2; i++) {
+        C2D_SpriteSetPos(&sprites[i].spr, sprites[i].dx, sprites[i].dy);
         C2D_DrawSprite(&sprites[i].spr);
     }
     C3D_FrameEnd(0);
 }
 
 void input() {
-    //hidScanInput();
-    //u32 kDown = hidKeysDown();
+    Sprite* nebi = &sprites[0];
+    hidScanInput();
+    u32 kDown = hidKeysDown();
+
+    if (kDown & KEY_UP) nebi->dy -= 10;
+    if (kDown & KEY_DOWN) nebi->dy += 10;
+    if (kDown & KEY_LEFT) nebi->dx -= 10;
+    if (kDown & KEY_RIGHT) nebi->dx += 10;
 }
 
 void logic() {
@@ -66,15 +78,14 @@ int main(int argc, char **argv) {
     // init 
     romfsInit();
     gfxInitDefault();
+	gfxSetDoubleBuffering(GFX_BOTTOM, true);
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
     C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
     C2D_Prepare();
     consoleInit(GFX_TOP, NULL);
 
-	gfxSetDoubleBuffering(GFX_BOTTOM, true);
-
     // Setup target (bottom screen)
-    C3D_RenderTarget* bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+    bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
     // Load sprite files
     spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");
@@ -88,14 +99,13 @@ int main(int argc, char **argv) {
     setup();
 
     while(aptMainLoop()) {
-        hidScanInput();
-        u32 kDown = hidKeysDown();
+        //hidScanInput();
+        //u32 kDown = hidKeysDown();
 
-        draw();
         input();
-        logic();
+        draw();
 
-        if (kDown & KEY_START) break;
+        //if (kDown & KEY_START) break;
     }
 
     C2D_SpriteSheetFree(spriteSheet);
