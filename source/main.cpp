@@ -27,6 +27,8 @@ void setup() {
     C2D_SpriteSetPos(&nebi->spr, SCREEN_WIDTH / 3, SCREEN_HEIGHT / 2);
     nebi->dx = 10.0f;
     nebi->dy = 10.0f;
+    printf("\x1b[4;0Hnebi X: %f", nebi->dx);
+    printf("\x1b[5;0Hnebi Y: %f", nebi->dy);
 
     Sprite* squart = &sprites[1];
 
