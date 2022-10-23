@@ -53,10 +53,8 @@ void draw() {
     C3D_FrameEnd(0);
 }
 
-void input() {
+void input(u32 kDown) {
     Sprite* nebi = &sprites[0];
-    hidScanInput();
-    u32 kDown = hidKeysDown();
 
     if (kDown & KEY_UP) nebi->dy -= 10;
     if (kDown & KEY_DOWN) nebi->dy += 10;
@@ -94,13 +92,13 @@ int main(int argc, char **argv) {
     setup();
 
     while(aptMainLoop()) {
-        //hidScanInput();
-        //u32 kDown = hidKeysDown();
+        hidScanInput();
+        u32 kDown = hidKeysDown();
 
-        input();
+        input(kDown);
         draw();
 
-        //if (kDown & KEY_START) break;
+        if (kDown & KEY_START) break;
     }
 
     C2D_SpriteSheetFree(spriteSheet);
