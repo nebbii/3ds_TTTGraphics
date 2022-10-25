@@ -7,7 +7,6 @@
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 240
 
-
 int frame;
 u32 kDown;
 
@@ -20,35 +19,41 @@ typedef struct
 } Sprite;
 
 static C2D_SpriteSheet spriteSheet;
-static Sprite sprites[2];
+static Sprite sprites[99];
+int maxSprites;
 
-void setup() {
-    Sprite* nebi = &sprites[0];
-    C2D_SpriteFromSheet(&nebi->spr, spriteSheet, 0);
-    C2D_SpriteSetCenter(&nebi->spr, 0.5f, 0.5f);
-    nebi->dx = 100;
-    nebi->dy = 50;
+void drawCross() {
 
-    Sprite* squart = &sprites[1];
+}
+
+void drawCircle(int x, int y) {
+    Sprite* squart = &sprites[maxSprites]; maxSprites++;
     C2D_SpriteFromSheet(&squart->spr, spriteSheet, 1);
     C2D_SpriteSetCenter(&squart->spr, 0.5f, 0.5f);
-    squart->dx = 180;
-    squart->dy = 50;
+    squart->dx = static_cast<float>(x);
+    squart->dy = static_cast<float>(y);
+}
+
+void setup() {
+    Sprite** cells = new Sprite*[99]; 
+
+    for(int i = 0; i < 9; i++) {
+        cells[i] = &sprites[i];
+        C2D_SpriteFromSheet(&cells[i]->spr, spriteSheet, 0);
+        C2D_SpriteSetCenter(&cells[i]->spr, 0.5f, 0.5f);
+        cells[i]->dx = 50 + 5 * i;
+        cells[i]->dy = 50 + 5 * i;
+        maxSprites++;
+    }
 }
 
 void draw() {
-    Sprite* nebi = &sprites[0];
-
-    printf("\x1b[2;0HFramecount: %i", frame);
-    printf("\x1b[4;0Hnebi X: %f", nebi->dx);
-    printf("\x1b[5;0Hnebi Y: %f", nebi->dy);
-
     frame++;
 
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C2D_TargetClear(bottom, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)); 
     C2D_SceneBegin(bottom);
-    for (size_t i = 0; i < 2; i++) {
+    for (size_t i = 0; i < maxSprites; i++) {
         C2D_SpriteSetPos(&sprites[i].spr, sprites[i].dx, sprites[i].dy);
         C2D_DrawSprite(&sprites[i].spr);
     }
@@ -56,12 +61,13 @@ void draw() {
 }
 
 void input(u32 kDown) {
-    Sprite* nebi = &sprites[0];
+    touchPosition touch;
+    hidTouchRead(&touch);
 
-    if (kDown & KEY_UP) nebi->dy -= 10;
-    if (kDown & KEY_DOWN) nebi->dy += 10;
-    if (kDown & KEY_LEFT) nebi->dx -= 10;
-    if (kDown & KEY_RIGHT) nebi->dx += 10;
+    if(kDown & KEY_TOUCH) 
+        drawCircle(touch.px, touch.py);
+
+    printf("\x1b[4;1H%i        ", touch.px);
 }
 
 void logic() {
@@ -90,6 +96,7 @@ int main(int argc, char **argv) {
 	u8* frameBuffer = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
 
     frame = 0;
+    maxSprites = 0;
 
     setup();
 
