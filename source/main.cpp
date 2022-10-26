@@ -7,7 +7,6 @@
 #define SCREEN_WIDTH  320
 #define SCREEN_HEIGHT 240
 
-int frame;
 u32 kDown;
 
 C3D_RenderTarget* bottom;
@@ -19,44 +18,49 @@ typedef struct
 } Sprite;
 
 static C2D_SpriteSheet spriteSheet;
-static Sprite sprites[99];
-int maxSprites;
+static Sprite cellSprites[9];
+int lastSprite;
 
-void drawCross() {
+int turn;
 
+void drawCell(int sprIndex, int x, int y) {
+    Sprite* cell = &cellSprites[++lastSprite];
+    C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
+    C2D_SpriteSetCenter(&cell->spr, 0.5f, 0.5f);
+    cell->dx = static_cast<float>(x);
+    cell->dy = static_cast<float>(y);
 }
 
-void drawCircle(int x, int y) {
-    Sprite* squart = &sprites[maxSprites]; maxSprites++;
-    C2D_SpriteFromSheet(&squart->spr, spriteSheet, 1);
-    C2D_SpriteSetCenter(&squart->spr, 0.5f, 0.5f);
-    squart->dx = static_cast<float>(x);
-    squart->dy = static_cast<float>(y);
+void resetBoard() {
+    for(int i = 0; i < 9; i++) {
+        drawCell(0, (20 * i), (30 * i));
+    }
+    printf("\x1b[9;1HHello world! %i has won!", 2);
 }
+
+/*
+void detectCell(int px, int py) {
+
+}
+*/
 
 void setup() {
-    Sprite** cells = new Sprite*[99]; 
-
-    for(int i = 0; i < 9; i++) {
-        cells[i] = &sprites[i];
-        C2D_SpriteFromSheet(&cells[i]->spr, spriteSheet, 0);
-        C2D_SpriteSetCenter(&cells[i]->spr, 0.5f, 0.5f);
-        cells[i]->dx = 50 + 5 * i;
-        cells[i]->dy = 50 + 5 * i;
-        maxSprites++;
-    }
+    Sprite** cellSprites = new Sprite*[20]; 
+    lastSprite = -1;
 }
 
 void draw() {
-    frame++;
-
+    // setup frame
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
     C2D_TargetClear(bottom, C2D_Color32f(0.0f, 0.0f, 0.0f, 1.0f)); 
     C2D_SceneBegin(bottom);
-    for (size_t i = 0; i < maxSprites; i++) {
-        C2D_SpriteSetPos(&sprites[i].spr, sprites[i].dx, sprites[i].dy);
-        C2D_DrawSprite(&sprites[i].spr);
+
+    // draw cells
+    for (size_t i = 0; i < lastSprite; i++) {
+        C2D_SpriteSetPos(&cellSprites[i].spr, cellSprites[i].dx, cellSprites[i].dy);
+        C2D_DrawSprite(&cellSprites[i].spr);
     }
+
     C3D_FrameEnd(0);
 }
 
@@ -64,10 +68,7 @@ void input(u32 kDown) {
     touchPosition touch;
     hidTouchRead(&touch);
 
-    if(kDown & KEY_TOUCH) 
-        drawCircle(touch.px, touch.py);
-
-    printf("\x1b[4;1H%i        ", touch.px);
+    //if(kDown & KEY_TOUCH)
 }
 
 void logic() {
@@ -95,10 +96,9 @@ int main(int argc, char **argv) {
     // double buffering is fast
 	u8* frameBuffer = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
 
-    frame = 0;
-    maxSprites = 0;
-
     setup();
+
+    resetBoard();
 
     while(aptMainLoop()) {
         hidScanInput();
