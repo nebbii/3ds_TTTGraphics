@@ -4,8 +4,9 @@
 #include <string.h>
 
 #define MAX_SPRITES  100
-#define SCREEN_WIDTH  320
-#define SCREEN_HEIGHT 240
+
+#define PLAYW  160
+#define PLAYH  160
 
 u32 kDown;
 
@@ -23,19 +24,21 @@ int lastSprite;
 
 int turn;
 
-void drawCell(int sprIndex, int x, int y) {
+void createCell(int sprIndex, int x, int y) {
     Sprite* cell = &cellSprites[++lastSprite];
     C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
-    C2D_SpriteSetCenter(&cell->spr, 0.5f, 0.5f);
+
     cell->dx = static_cast<float>(x);
     cell->dy = static_cast<float>(y);
 }
 
 void resetBoard() {
-    for(int i = 0; i < 9; i++) {
-        drawCell(0, (20 * i), (30 * i));
+    for(int w = 1; w <= 3; w++) {
+        for(int h = 1; h <= 3; h++) {
+            createCell(0, 30 + PLAYW / 3 * w, -16 + PLAYH / 3 * h);
+        }
     }
-    printf("\x1b[9;1HHello world! %i has won!", 2);
+
 }
 
 /*
@@ -56,7 +59,7 @@ void draw() {
     C2D_SceneBegin(bottom);
 
     // draw cells
-    for (size_t i = 0; i < lastSprite; i++) {
+    for (size_t i = 0; i <= lastSprite; i++) {
         C2D_SpriteSetPos(&cellSprites[i].spr, cellSprites[i].dx, cellSprites[i].dy);
         C2D_DrawSprite(&cellSprites[i].spr);
     }
@@ -68,7 +71,10 @@ void input(u32 kDown) {
     touchPosition touch;
     hidTouchRead(&touch);
 
-    //if(kDown & KEY_TOUCH)
+    printf("\x1b[1;0HX coordinate: %i     ",touch.px);
+    printf("\x1b[2;0HY coordinate: %i     ",touch.py);
+
+    //if(kDown & KEY_TOUCH) {
 }
 
 void logic() {
