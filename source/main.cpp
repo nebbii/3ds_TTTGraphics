@@ -15,7 +15,7 @@ C3D_RenderTarget* bottom;
 typedef struct
 {
     C2D_Sprite spr;
-    float dx, dy;
+    float x, y;
 } Sprite;
 
 static C2D_SpriteSheet spriteSheet;
@@ -28,24 +28,27 @@ void createCell(int sprIndex, int x, int y) {
     Sprite* cell = &cellSprites[++lastSprite];
     C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
 
-    cell->dx = static_cast<float>(x);
-    cell->dy = static_cast<float>(y);
+    cell->x = static_cast<float>(x);
+    cell->y = static_cast<float>(y);
 }
 
 void resetBoard() {
     for(int w = 1; w <= 3; w++) {
         for(int h = 1; h <= 3; h++) {
-            createCell(0, 30 + PLAYW / 3 * w, -16 + PLAYH / 3 * h);
+            createCell(0, 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
         }
     }
-
 }
 
-/*
 void detectCell(int px, int py) {
-
+    // 48x48
+    for(int i = 0; i <= lastSprite; i++) {
+        if ((px > cellSprites[i].x && px < cellSprites[i].x + 48) &&
+            (py > cellSprites[i].y && py < cellSprites[i].y + 48)) {
+                printf("\x1b[9;0Hits in the hole: %i     ", i);
+           }
+    }
 }
-*/
 
 void setup() {
     Sprite** cellSprites = new Sprite*[20]; 
@@ -60,7 +63,7 @@ void draw() {
 
     // draw cells
     for (size_t i = 0; i <= lastSprite; i++) {
-        C2D_SpriteSetPos(&cellSprites[i].spr, cellSprites[i].dx, cellSprites[i].dy);
+        C2D_SpriteSetPos(&cellSprites[i].spr, cellSprites[i].x, cellSprites[i].y);
         C2D_DrawSprite(&cellSprites[i].spr);
     }
 
@@ -73,6 +76,8 @@ void input(u32 kDown) {
 
     printf("\x1b[1;0HX coordinate: %i     ",touch.px);
     printf("\x1b[2;0HY coordinate: %i     ",touch.py);
+
+    detectCell(touch.px, touch.py);
 
     //if(kDown & KEY_TOUCH) {
 }
