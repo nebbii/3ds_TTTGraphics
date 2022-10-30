@@ -21,8 +21,8 @@ typedef struct
 static C2D_SpriteSheet spriteSheet;
 
 int turn;
-static Sprite boardSprites[12];
-static int board[9];
+static Sprite boardSprites[10];
+static int board[10];
 int lastSprite;
 
 
@@ -35,12 +35,8 @@ void createCell(int sprIndex, int x, int y) {
 }
 
 void createBoard() {
-    int calls = 0;
     for(int w = 1; w <= 3; w++) {
         for(int h = 1; h <= 3; h++) {
-            printf("\x1b[10;0Hloop cycles: %i", calls); 
-            printf("\x1b[11;0Hcell value: %i", board[calls]); 
-            printf("\x1b[12;0HlastSprite val: %i", lastSprite); 
             createCell(board[++lastSprite], 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
         }
     }
@@ -48,7 +44,7 @@ void createBoard() {
 
 void clearBoard() {
     for(int i = 0; i < 9; i++) { 
-        board[i] = rand() % 3;
+        board[i] = 0;
     }
 }
 
@@ -80,6 +76,7 @@ void draw() {
 
     // draw cells
     for (size_t i = 0; i <= lastSprite; i++) {
+        C2D_SpriteFromSheet(&boardSprites[i].spr, spriteSheet, board[i]);
         C2D_SpriteSetPos(&boardSprites[i].spr, boardSprites[i].x, boardSprites[i].y);
         C2D_DrawSprite(&boardSprites[i].spr);
     }
@@ -96,7 +93,10 @@ void input(u32 kDown) {
 
     if(kDown & KEY_TOUCH) {
         int tappedCell = detectCell(touch.px, touch.py);
+
         printf("\x1b[9;0Hits in the hole: %i     ", tappedCell);
+
+        board[tappedCell] = 1;
     }
 }
 
