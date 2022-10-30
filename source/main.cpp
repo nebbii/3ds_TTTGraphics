@@ -19,15 +19,15 @@ typedef struct
 } Sprite;
 
 static C2D_SpriteSheet spriteSheet;
-static Sprite cellSprites[10];
-int lastSprite;
 
 int turn;
-int board[9];
+static Sprite boardSprites[12];
+static int board[9];
+int lastSprite;
 
 
 void createCell(int sprIndex, int x, int y) {
-    Sprite* cell = &cellSprites[++lastSprite];
+    Sprite* cell = &boardSprites[lastSprite];
     C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
 
     cell->x = static_cast<float>(x);
@@ -35,28 +35,28 @@ void createCell(int sprIndex, int x, int y) {
 }
 
 void createBoard() {
+    int calls = 0;
     for(int w = 1; w <= 3; w++) {
         for(int h = 1; h <= 3; h++) {
+            printf("\x1b[10;0Hloop cycles: %i", calls); 
+            printf("\x1b[11;0Hcell value: %i", board[calls]); 
             printf("\x1b[12;0HlastSprite val: %i", lastSprite); 
-            printf("\x1b[11;0Hcell value: %i", board[lastSprite]); 
-            createCell(2, 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
+            createCell(board[++lastSprite], 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
         }
     }
 }
 
-/*
-int* clearBoard() {
-    int arr[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-    return arr;
+void clearBoard() {
+    for(int i = 0; i < 9; i++) { 
+        board[i] = rand() % 3;
+    }
 }
-*/
 
 int detectCell(int px, int py) {
     // 48x48
     for(int i = 0; i <= lastSprite; i++) {
-        if ((px > cellSprites[i].x && px < cellSprites[i].x + 48) &&
-            (py > cellSprites[i].y && py < cellSprites[i].y + 48)) {
+        if ((px > boardSprites[i].x && px < boardSprites[i].x + 48) &&
+            (py > boardSprites[i].y && py < boardSprites[i].y + 48)) {
                 return i;
            }
     }
@@ -67,9 +67,7 @@ int detectCell(int px, int py) {
 void setup() {
     lastSprite = -1;
 
-    for(int i = 0; i < 0; i++) { 
-        board[i] = 1;
-    }
+    clearBoard();
 
     createBoard();
 }
@@ -82,8 +80,8 @@ void draw() {
 
     // draw cells
     for (size_t i = 0; i <= lastSprite; i++) {
-        C2D_SpriteSetPos(&cellSprites[i].spr, cellSprites[i].x, cellSprites[i].y);
-        C2D_DrawSprite(&cellSprites[i].spr);
+        C2D_SpriteSetPos(&boardSprites[i].spr, boardSprites[i].x, boardSprites[i].y);
+        C2D_DrawSprite(&boardSprites[i].spr);
     }
 
     C3D_FrameEnd(0);
