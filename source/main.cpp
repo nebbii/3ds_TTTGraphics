@@ -19,25 +19,27 @@ typedef struct
 } Sprite;
 
 static C2D_SpriteSheet spriteSheet;
-static Sprite cellSprites[9];
+static Sprite cellSprites[10];
 int lastSprite;
 
 int turn;
 int board[9];
 
+
 void createCell(int sprIndex, int x, int y) {
     Sprite* cell = &cellSprites[++lastSprite];
-    C2D_SpriteFromSheet(&cell->spr, spriteSheet, 2);
+    C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
 
     cell->x = static_cast<float>(x);
     cell->y = static_cast<float>(y);
 }
 
-void drawBoard() {
-    int index = -1;
+void createBoard() {
     for(int w = 1; w <= 3; w++) {
         for(int h = 1; h <= 3; h++) {
-            createCell(board[++index], 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
+            printf("\x1b[12;0HlastSprite val: %i", lastSprite); 
+            printf("\x1b[11;0Hcell value: %i", board[lastSprite]); 
+            createCell(2, 30 + PLAYH / 3 * h, -16 + PLAYW / 3 * w);
         }
     }
 }
@@ -63,9 +65,13 @@ int detectCell(int px, int py) {
 
 
 void setup() {
-    Sprite** cellSprites = new Sprite*[20]; 
-    int board[9] = {1, 2, 1, 0, 0, 0, 0, 0, 0};
     lastSprite = -1;
+
+    for(int i = 0; i < 0; i++) { 
+        board[i] = 1;
+    }
+
+    createBoard();
 }
 
 void draw() {
@@ -90,10 +96,10 @@ void input(u32 kDown) {
     printf("\x1b[1;0HX coordinate: %i     ",touch.px);
     printf("\x1b[2;0HY coordinate: %i     ",touch.py);
 
-    //if(kDown & KEY_TOUCH) {
+    if(kDown & KEY_TOUCH) {
         int tappedCell = detectCell(touch.px, touch.py);
         printf("\x1b[9;0Hits in the hole: %i     ", tappedCell);
-   // }
+    }
 }
 
 void logic() {
@@ -122,8 +128,6 @@ int main(int argc, char **argv) {
 	u8* frameBuffer = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
 
     setup();
-
-    drawBoard();
 
     while(aptMainLoop()) {
         hidScanInput();
