@@ -137,18 +137,25 @@ void logic() {
     printf("\x1b[10;0Hnebi score:   %i    ", score[0]);
     printf("\x1b[11;0Hsquart score: %i    ", score[1]);
 
-    switch(state) {
-        case 10:
-        case 20:
-        case 30:
-            if(tapped > -2) 
+    if(tapped > -2) { 
+        switch(state) {
+            case 10:
+            case 20:
+                if (state == 10) {
+                    score[0]++;
+                } 
+                else if (state == 20) { 
+                    score[1]++;
+                }
+            case 30:
                 setup();
-            break;
-        default:
-            if(tapped > -1 && board[tapped] == 0) {
-                board[tapped] = turn;
-                turn = (turn == 1 ? 2 : 1);
-            }
+                break;
+            default:
+                if(tapped > -1 && board[tapped] == 0) {
+                    board[tapped] = turn;
+                    turn = (turn == 1 ? 2 : 1);
+                }
+        }
     }
 }
 
