@@ -20,7 +20,7 @@ typedef struct
 
 static C2D_SpriteSheet spriteSheet;
 
-int turn;
+int turn; int state;
 static Sprite boardSprites[10];
 static int board[10];
 int lastSprite;
@@ -43,9 +43,10 @@ void createBoard() {
 }
 
 void clearBoard() {
-    for(int i = 0; i < 9; i++) { 
-        board[i] = 0;
-    }
+    lastSprite = -1;
+
+    memset(boardSprites, 0, sizeof(boardSprites));
+    memset(board, 0, sizeof(board));
 }
 
 int detectCell(int px, int py) {
@@ -59,9 +60,39 @@ int detectCell(int px, int py) {
     return -1;
 }
 
+int checkState() {
+    for(int i=0; i<3; i++) {
+        if((board[0+i*3]==1 && board[1+i*3]==1 && board[2+i*3]==1) ||
+           (board[0+i]==1 && board[3+i]==1 && board[6+i]==1))
+        {
+            return 10;
+        }
+        else if((board[0+i*3]==2 && board[1+i*3]==2 && board[2+i*3]==2) ||
+           (board[0+i]==2 && board[3+i]==2 && board[6+i]==2))
+        {
+            return 20;
+        }
+    }
+
+    // diagonals
+    if((board[0]==1 && board[4]==1 && board[8]==1) ||
+       (board[2]==1 && board[4]==1 && board[6]==1))
+    {
+        return 10;
+    }
+    else if((board[0]==2 && board[4]==2 && board[8]==2) ||
+       (board[2]==2 && board[4]==2 && board[6]==2))
+    {
+        return 20;
+    }
+
+
+    return 0;
+}
+
 
 void setup() {
-    lastSprite = -1;
+    state = 0; turn = 1;
 
     clearBoard();
 
@@ -91,17 +122,29 @@ void input(u32 kDown) {
     printf("\x1b[1;0HX coordinate: %i     ",touch.px);
     printf("\x1b[2;0HY coordinate: %i     ",touch.py);
 
-    if(kDown & KEY_TOUCH) {
-        int tappedCell = detectCell(touch.px, touch.py);
+    switch(state) {
+        case 10:
+        case 20:
+        case 30:
+            if(kDown & KEY_TOUCH) 
+                setup();
+            break;
+        default:
+            if(kDown & KEY_TOUCH) {
+                int tappedCell = detectCell(touch.px, touch.py);
 
-        printf("\x1b[9;0Hits in the hole: %i     ", tappedCell);
-
-        board[tappedCell] = 1;
+                if(board[tappedCell] == 0) {
+                    board[tappedCell] = turn;
+                    turn = (turn == 1 ? 2 : 1);
+                }
+            }
     }
 }
 
 void logic() {
-
+    state = checkState();
+    printf("\x1b[14;0Hturn: %i    ", turn);
+    printf("\x1b[15;0Hwin: %i    ", state);
 }
 
 
@@ -133,6 +176,7 @@ int main(int argc, char **argv) {
 
         input(kDown);
         draw();
+        logic();
 
         if (kDown & KEY_START) break;
     }
