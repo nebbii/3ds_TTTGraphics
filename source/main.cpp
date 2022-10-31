@@ -99,6 +99,11 @@ int checkState() {
         return 20;
     }
 
+    // no ties allowed
+    if(board[0]!=0 && board[1]!=0 && board[2]!=0 && board[3]!=0 && board[4]!=0 && board[5]!=0 && board[6]!=0 && board[7]!=0 && board[8]!=0) {
+        return 30;
+    }
+
 
     return 0;
 }
