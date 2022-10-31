@@ -18,18 +18,20 @@ typedef struct
     float x, y;
 } Sprite;
 
-static C2D_SpriteSheet spriteSheet;
+static C2D_SpriteSheet sprites;
+static C2D_SpriteSheet banners;
 
-int turn; int state; int tapped;
+int turn; int state; int tapped; int prevWin;
 int score[2];
 static Sprite boardSprites[10];
+static Sprite bannerSprites[2];
 static int board[10];
 int lastSprite;
 
 
 void createCell(int sprIndex, int x, int y) {
     Sprite* cell = &boardSprites[lastSprite];
-    C2D_SpriteFromSheet(&cell->spr, spriteSheet, sprIndex);
+    C2D_SpriteFromSheet(&cell->spr, sprites, sprIndex);
 
     cell->x = static_cast<float>(x);
     cell->y = static_cast<float>(y);
@@ -48,6 +50,16 @@ void clearBoard() {
 
     memset(boardSprites, 0, sizeof(boardSprites));
     memset(board, 0, sizeof(board));
+}
+
+void loadBanners() {
+    Sprite* nebiwin = &bannerSprites[0];
+    C2D_SpriteFromSheet(&nebiwin->spr, banners, 0);
+    Sprite* squartwin = &bannerSprites[1];
+    C2D_SpriteFromSheet(&squartwin->spr, banners, 1);
+
+    nebiwin->x = squartwin->x = 40;
+    nebiwin->y = squartwin->y = 40;
 }
 
 int detectCell(int px, int py) {
@@ -93,10 +105,10 @@ int checkState() {
 
 
 void setup() {
-    state = 0; turn = 1; tapped = -1;
+    state = 0; turn = 1; tapped = -1; prevWin = -1;
 
     clearBoard();
-
+    loadBanners();
     createBoard();
 }
 
@@ -108,9 +120,14 @@ void draw() {
 
     // draw cells
     for (size_t i = 0; i <= lastSprite; i++) {
-        C2D_SpriteFromSheet(&boardSprites[i].spr, spriteSheet, board[i]);
+        C2D_SpriteFromSheet(&boardSprites[i].spr, sprites, board[i]);
         C2D_SpriteSetPos(&boardSprites[i].spr, boardSprites[i].x, boardSprites[i].y);
         C2D_DrawSprite(&boardSprites[i].spr);
+    }
+
+    if(prevWin > -1) {
+        C2D_SpriteSetPos(&bannerSprites[prevWin].spr, bannerSprites[prevWin].x, bannerSprites[prevWin].y);
+        C2D_DrawSprite(&bannerSprites[prevWin].spr);
     }
 
     C3D_FrameEnd(0);
@@ -125,8 +142,6 @@ void input(u32 kDown) {
     if(kDown & KEY_TOUCH) {
         tapped = detectCell(touch.px, touch.py);
     }
-
-    printf("\x1b[5;0Htapped: %i     ", tapped);
 }
 
 void logic() {
@@ -139,12 +154,12 @@ void logic() {
 
     switch(state) {
         case 10:
-            score[0]++;
+            score[0]++; prevWin = 0;
             state = 30;
             printf("\x1b[13;0HNEBI WINS!");
             break;
         case 20:
-            score[1]++;
+            score[1]++; prevWin = 1;
             state = 30;
             printf("\x1b[13;0HSQUART WINS!");
             break;
@@ -177,8 +192,9 @@ int main(int argc, char **argv) {
     bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
     // Load sprite files
-    spriteSheet = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");
-    if (!spriteSheet) svcBreak(USERBREAK_PANIC);
+    sprites = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");
+    banners = C2D_SpriteSheetLoad("romfs:/gfx/banners.t3x");
+    if (!sprites || !banners) svcBreak(USERBREAK_PANIC);
 
     // double buffering is fast
 	u8* frameBuffer = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
@@ -198,7 +214,8 @@ int main(int argc, char **argv) {
         if (kDown & KEY_START) break;
     }
 
-    C2D_SpriteSheetFree(spriteSheet);
+    C2D_SpriteSheetFree(sprites);
+    C2D_SpriteSheetFree(banners);
 
     C2D_Fini();
     C3D_Fini();
