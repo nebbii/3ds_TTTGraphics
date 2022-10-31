@@ -20,7 +20,8 @@ typedef struct
 
 static C2D_SpriteSheet spriteSheet;
 
-int turn; int state;
+int turn; int state; int tapped;
+int score[2];
 static Sprite boardSprites[10];
 static int board[10];
 int lastSprite;
@@ -92,7 +93,7 @@ int checkState() {
 
 
 void setup() {
-    state = 0; turn = 1;
+    state = 0; turn = 1; tapped = -1;
 
     clearBoard();
 
@@ -122,29 +123,33 @@ void input(u32 kDown) {
     printf("\x1b[1;0HX coordinate: %i     ",touch.px);
     printf("\x1b[2;0HY coordinate: %i     ",touch.py);
 
-    switch(state) {
-        case 10:
-        case 20:
-        case 30:
-            if(kDown & KEY_TOUCH) 
-                setup();
-            break;
-        default:
-            if(kDown & KEY_TOUCH) {
-                int tappedCell = detectCell(touch.px, touch.py);
+    tapped = -2;
 
-                if(board[tappedCell] == 0) {
-                    board[tappedCell] = turn;
-                    turn = (turn == 1 ? 2 : 1);
-                }
-            }
+    if(kDown & KEY_TOUCH) {
+        tapped = detectCell(touch.px, touch.py);
     }
+
+    printf("\x1b[5;0Htapped: %i     ", tapped);
 }
 
 void logic() {
     state = checkState();
-    printf("\x1b[14;0Hturn: %i    ", turn);
-    printf("\x1b[15;0Hwin: %i    ", state);
+    printf("\x1b[10;0Hnebi score:   %i    ", score[0]);
+    printf("\x1b[11;0Hsquart score: %i    ", score[1]);
+
+    switch(state) {
+        case 10:
+        case 20:
+        case 30:
+            if(tapped > -2) 
+                setup();
+            break;
+        default:
+            if(tapped > -1 && board[tapped] == 0) {
+                board[tapped] = turn;
+                turn = (turn == 1 ? 2 : 1);
+            }
+    }
 }
 
 
@@ -167,6 +172,8 @@ int main(int argc, char **argv) {
 
     // double buffering is fast
 	u8* frameBuffer = gfxGetFramebuffer(GFX_BOTTOM, GFX_LEFT, NULL, NULL);
+
+    int score[2] = {0, 0};
 
     setup();
 
