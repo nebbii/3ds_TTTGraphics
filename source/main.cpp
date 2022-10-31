@@ -120,9 +120,6 @@ void input(u32 kDown) {
     touchPosition touch;
     hidTouchRead(&touch);
 
-    printf("\x1b[1;0HX coordinate: %i     ",touch.px);
-    printf("\x1b[2;0HY coordinate: %i     ",touch.py);
-
     tapped = -2;
 
     if(kDown & KEY_TOUCH) {
@@ -133,29 +130,35 @@ void input(u32 kDown) {
 }
 
 void logic() {
-    state = checkState();
     printf("\x1b[10;0Hnebi score:   %i    ", score[0]);
     printf("\x1b[11;0Hsquart score: %i    ", score[1]);
 
-    if(tapped > -2) { 
-        switch(state) {
-            case 10:
-            case 20:
-                if (state == 10) {
-                    score[0]++;
-                } 
-                else if (state == 20) { 
-                    score[1]++;
-                }
-            case 30:
+    if (state != 30) {
+        state = checkState();
+    }
+
+    switch(state) {
+        case 10:
+            score[0]++;
+            state = 30;
+            printf("\x1b[13;0HNEBI WINS!");
+            break;
+        case 20:
+            score[1]++;
+            state = 30;
+            printf("\x1b[13;0HSQUART WINS!");
+            break;
+        case 30:
+            if(tapped > -2) {
+                printf("\x1b[13;0H                    ");
                 setup();
-                break;
-            default:
-                if(tapped > -1 && board[tapped] == 0) {
-                    board[tapped] = turn;
-                    turn = (turn == 1 ? 2 : 1);
-                }
-        }
+            }
+            break;
+        default:
+            if(tapped > -1 && board[tapped] == 0) {
+                board[tapped] = turn;
+                turn = (turn == 1 ? 2 : 1);
+            }
     }
 }
 
